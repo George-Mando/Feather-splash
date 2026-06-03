@@ -25,7 +25,7 @@
 
 > *Eclipse the ordinary. Build what others can't imagine.*
 
-[![▶ PLAY FEATHERFALL VILLAGE](https://img.shields.io/badge/%E2%96%B6_PLAY_FEATHERFALL_VILLAGE-ff6b2a?style=for-the-badge&logoColor=black&labelColor=000000)](https://george-mando.github.io/Featherfall_village/)
+[![▶ PLAY FEATHERFALL VILLAGE](https://img.shields.io/badge/%E2%96%B6_PLAY_Feather-splash-ff6b2a?style=for-the-badge&logoColor=black&labelColor=000000)](https://george-mando.github.io/Feather-splash/)
 
 **XenClipse Studios · Portfolio · Game Dev Hub**
 
@@ -82,7 +82,7 @@ public:
 ![Canvas API](https://img.shields.io/badge/Canvas_API-ff6b2a?style=flat-square)
 ![Game Design](https://img.shields.io/badge/Game_Design-ff2d78?style=flat-square)
 
-▶ [**Play now →**](https://george-mando.github.io/Featherfall_village/)
+▶ [**Play now →**](https://george-mando.github.io/Feather-splash/)
 
 </td>
 <td width="50%" valign="top">
@@ -96,7 +96,7 @@ public:
 ![Canvas API](https://img.shields.io/badge/Canvas_API-ff6b2a?style=flat-square)
 ![Puzzle](https://img.shields.io/badge/Puzzle_Logic-ff2d78?style=flat-square)
 
-▶ [**Play now →**](https://george-mando.github.io/Featherfall_village/)
+▶ [**Play now →**](https://george-mando.github.io/Feather-splash/)
 
 </td>
 </tr>
@@ -260,8 +260,8 @@ Want to play **Featherfall Village** or **Birdy Blocks** directly from this repo
 
 ```bash
 # Clone the repo
-git clone https://github.com/George-Mando/Featherfall_village.git
-cd Featherfall_village
+git clone https://github.com/George-Mando/Feather-splash.git
+cd Feather-splash
 
 # Open directly in browser — no build step needed!
 open featherfall-village.html   # macOS
