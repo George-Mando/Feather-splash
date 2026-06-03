@@ -11,11 +11,48 @@ canvas{display:block;width:100%;image-rendering:pixelated;border:3px solid #ff6b
 #score{color:#ffd700!important;}
 #lives{color:#ff6b35!important;}
 #level{color:#7ee8a2!important;}
-#controls{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;width:100%;}
-.ctrl-row{display:flex;gap:6px;justify-content:center;}
-button{background:#1a1a2e;border:2px solid #ff6b35;color:#fff;padding:10px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-family:'Courier New',monospace;font-weight:bold;min-width:48px;min-height:44px;user-select:none;-webkit-user-select:none;touch-action:manipulation;}
-button:active{background:#ff6b35;color:#111;}
-#startBtn{background:#ff6b35;color:#111;padding:10px 24px;font-size:14px;border-color:#ff6b35;}
+/* ── MOBILE CONTROL PAD ── */
+#controls{
+  margin-top:6px;width:100%;
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+  align-items:end;
+  padding:0 4px;
+}
+/* Left side: D-pad */
+#dpad{display:grid;grid-template-columns:60px 60px 60px;grid-template-rows:60px 60px;gap:5px;}
+/* Right side: action buttons stacked */
+#abtns{display:flex;flex-direction:column;gap:5px;align-items:flex-end;}
+.btn{
+  background:rgba(26,26,46,0.92);
+  border:3px solid #ff6b35;color:#fff;
+  border-radius:14px;cursor:pointer;
+  font-size:18px;font-weight:900;
+  user-select:none;-webkit-user-select:none;
+  touch-action:none;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn:active,.btn.pressed{background:#ff6b35;color:#111;}
+/* D-pad individual sizes */
+#btnLeft,#btnRight{width:60px;height:60px;}
+#btnDown{width:60px;height:60px;}
+.dp-blank{width:60px;height:60px;}  /* invisible spacer */
+/* Action buttons */
+#btnJump{width:72px;height:72px;background:rgba(50,180,80,0.9);border-color:#1a8a40;font-size:22px;}
+#btnJump:active,#btnJump.pressed{background:#1a8a40;}
+#btnDuck{width:60px;height:55px;background:rgba(26,26,46,0.92);font-size:16px;}
+/* START button row */
+#startRow{width:100%;display:flex;justify-content:center;margin-top:5px;}
+#startBtn{
+  background:#ff6b35;color:#111;
+  border:3px solid #ff6b35;border-radius:12px;
+  padding:10px 32px;font-size:15px;font-weight:900;
+  cursor:pointer;font-family:'Courier New',monospace;
+  touch-action:none;user-select:none;
+}
+#startBtn:active{background:#cc4a1a;}
 #msg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:#fff;pointer-events:none;}
 #msg h2{font-size:22px;color:#ffd700;text-shadow:2px 2px #000;}
 #msg p{font-size:13px;color:#adf;margin-top:6px;}
@@ -35,17 +72,23 @@ button:active{background:#ff6b35;color:#111;}
     <p>Classic bird &amp; fish adventure!</p>
   </div>
   <div id="controls">
-    <div class="ctrl-row">
-      <button id="btnUp">▲ Jump</button>
+    <!-- LEFT: D-pad (left / blank / right on top; blank / duck / blank on bottom) -->
+    <div id="dpad">
+      <button class="btn" id="btnLeft">◄</button>
+      <div class="dp-blank"></div>
+      <button class="btn" id="btnRight">►</button>
+      <div class="dp-blank"></div>
+      <button class="btn" id="btnDown">▼<br><span style="font-size:10px">DUCK</span></button>
+      <div class="dp-blank"></div>
     </div>
-    <div class="ctrl-row">
-      <button id="btnLeft">◄</button>
-      <button id="btnDown">▼ Duck</button>
-      <button id="btnRight">►</button>
+    <!-- RIGHT: Jump (big) + Duck label -->
+    <div id="abtns">
+      <button class="btn" id="btnJump">↑<br><span style="font-size:11px">JUMP</span></button>
+      <div style="font-size:10px;color:#aaa;text-align:center;line-height:1.3;">Tap again<br>mid-air =<br>2nd jump</div>
     </div>
-    <div class="ctrl-row">
-      <button id="startBtn" onclick="startGame()">▶ START</button>
-    </div>
+  </div>
+  <div id="startRow">
+    <button id="startBtn" onclick="startGame()">▶ START / RESTART</button>
   </div>
 </div>
 
@@ -86,11 +129,15 @@ let cameraX   = 0;
 let player = {
   x: 80, y: 0, w: 22, h: 26,
   vx: 0, vy: 0,
-  onGround:   false,
-  dir:        1,          // 1 = right, -1 = left
-  invincible: 0,          // frames of invincibility after being hurt
-  dead:       false,
-  deathVy:    0
+  onGround:    false,
+  dir:         1,      // 1=right, -1=left
+  invincible:  0,
+  dead:        false,
+  deathVy:     0,
+  jumpsLeft:   2,      // double-jump counter (reset to 2 on land)
+  ducking:     false,  // true while duck held
+  normalH:     26,     // full height
+  duckH:       16      // crouched height
 };
 
 // ── LEVEL ARRAYS (rebuilt each level) ─────────────────────
@@ -421,7 +468,9 @@ function drawPlayer() {
 
   // Body (rounded orange rectangle)
   ctx.fillStyle = '#ff6b35';
-  roundRect(ctx, px+2, py+8, 18, 18, 4);
+  // Squish body vertically when ducking
+  const duckSquish = player.ducking ? 0.65 : 1.0;
+  roundRect(ctx, px+2, py+8, 18, 18*duckSquish, 4);
   ctx.fillStyle = '#ff8c5a';
   roundRect(ctx, px+4, py+10, 14, 14, 3);
 
@@ -696,10 +745,23 @@ function hurtPlayer() {
   }
 }
 
+// ── JUMP FUNCTION (handles double jump) ──────────────────
+// Called both by keyboard edge-detection and by the Jump button.
+function doJump() {
+  if (player.dead) return;
+  if (player.jumpsLeft > 0) {
+    // First jump is full height; second (double) jump slightly less
+    player.vy = player.jumpsLeft === 2 ? -7.2 : -5.8;
+    player.onGround = false;
+    player.jumpsLeft--;
+    spawnParticles(player.x + 11, player.y + player.h,
+      player.jumpsLeft === 0 ? '#ffdd44' : '#7ee8a2', 4);
+  }
+}
+
 // ── PLAYER UPDATE ─────────────────────────────────────────
 function updatePlayer() {
   if (player.dead) {
-    // Death animation: fly upward then fall
     player.y      += player.deathVy;
     player.deathVy += 0.4;
     return;
@@ -707,57 +769,77 @@ function updatePlayer() {
 
   if (player.invincible > 0) player.invincible--;
 
-  // Read inputs (keyboard + touch buttons)
+  // ── INPUTS ──
   const left  = keys['ArrowLeft']  || keys['a'] || touchLeft;
   const right = keys['ArrowRight'] || keys['d'] || touchRight;
-  const jump  = (keys['ArrowUp'] || keys['w'] || keys[' '] || touchUp) && player.onGround;
+  const duck  = keys['ArrowDown']  || keys['s'] || touchDuck;
 
-  // Horizontal movement
-  if      (left)  { player.vx = -2.2; player.dir = -1; }
-  else if (right) { player.vx =  2.2; player.dir =  1; }
-  else            { player.vx *= 0.8; }   // friction
+  // Keyboard jump — edge-triggered via jumpPressedPrev to avoid holding
+  const jumpHeld = keys['ArrowUp'] || keys['w'] || keys[' '];
+  if (jumpHeld && !player._jumpWas) doJump();
+  player._jumpWas = jumpHeld;
 
-  // Jump
-  if (jump) {
-    player.vy = -7;
-    player.onGround = false;
-    spawnParticles(player.x + 11, player.y + player.h, '#7ee8a2', 3);
+  // ── DUCK ──
+  player.ducking = duck && player.onGround;
+  if (player.ducking) {
+    // Shrink hitbox; shift y so feet stay on ground
+    if (player.h !== player.duckH) {
+      player.y += player.normalH - player.duckH;
+      player.h  = player.duckH;
+    }
+    player.vx *= 0.6;  // slow while ducking
+  } else {
+    // Restore full height
+    if (player.h !== player.normalH) {
+      player.y -= player.normalH - player.duckH;
+      player.h  = player.normalH;
+    }
   }
 
-  // Gravity
+  // ── HORIZONTAL MOVEMENT ──
+  if (!player.ducking) {
+    if      (left)  { player.vx = -2.2; player.dir = -1; }
+    else if (right) { player.vx =  2.2; player.dir =  1; }
+    else            { player.vx *= 0.8; }
+  } else {
+    player.vx *= 0.7;
+  }
+
+  // ── GRAVITY ──
   player.vy = Math.min(player.vy + 0.35, 10);
 
   player.x += player.vx;
   player.y += player.vy;
 
-  // Fell off-screen → lose a life
+  // Fell off screen
   if (player.y > H + 50) hurtPlayer();
-
-  // Can't scroll left past camera
   if (player.x < cameraX) player.x = cameraX;
 
+  const wasOnGround = player.onGround;
   collidePlayer();
 
-  // Coin collection
+  // Reset double-jump when landing
+  if (!wasOnGround && player.onGround) {
+    player.jumpsLeft = 2;
+  }
+
+  // ── COINS ──
   coins.forEach(c => {
     if (c.collected) return;
     if (rectOverlap(player, c)) {
-      c.collected = true;
-      score += 50;
+      c.collected = true; score += 50;
       spawnParticles(c.x+4, c.y, COIN, 5);
       updateHUD();
     }
   });
 
-  // Advance camera (never go backwards)
+  // ── CAMERA ──
   const targetCam = player.x - 120;
   cameraX = Math.max(cameraX, Math.max(0, Math.min(targetCam, 175*TILE - W)));
 
-  // Reach the flag → level clear
+  // ── FLAG ──
   if (!flagReached && player.x + player.w >= flagX && player.x <= flagX + 6) {
-    flagReached = true;
-    score += 1000;
-    updateHUD();
+    flagReached = true; score += 1000; updateHUD();
     setTimeout(() => {
       gameState = 'win';
       showMessage('LEVEL CLEAR! 🐟🐦', 'Score: ' + score + '  —  Press START');
@@ -819,6 +901,9 @@ function startGame() {
   player.onGround  = false;
   player.invincible = 0;
   player.dead       = false;
+  player.jumpsLeft  = 2;
+  player.ducking    = false;
+  player.h          = player.normalH;
   flagReached       = false;
 
   updateHUD();
@@ -833,21 +918,25 @@ document.addEventListener('keyup',   e => { keys[e.code] = false; keys[e.key] = 
 // ── TOUCH BUTTON INPUT ────────────────────────────────────
 let touchLeft  = false;
 let touchRight = false;
-let touchUp    = false;
+let touchDuck  = false;
 
+// Jump is event-driven (not held) — triggers on press, not per-frame
 function bindBtn(id, onDown, onUp) {
   const el = document.getElementById(id);
   if (!el) return;
-  el.addEventListener('touchstart', e => { e.preventDefault(); onDown(); }, { passive: false });
-  el.addEventListener('touchend',   e => { e.preventDefault(); onUp();   }, { passive: false });
-  el.addEventListener('mousedown',  onDown);
-  el.addEventListener('mouseup',    onUp);
-  el.addEventListener('mouseleave', onUp);
+  ['touchstart','mousedown'].forEach(ev =>
+    el.addEventListener(ev, e => { e.preventDefault(); el.classList.add('pressed'); onDown(e); }, { passive:false })
+  );
+  ['touchend','touchcancel','mouseup','mouseleave'].forEach(ev =>
+    el.addEventListener(ev, e => { e.preventDefault(); el.classList.remove('pressed'); if(onUp) onUp(e); }, { passive:false })
+  );
 }
 
-bindBtn('btnLeft',  () => touchLeft  = true, () => touchLeft  = false);
-bindBtn('btnRight', () => touchRight = true, () => touchRight = false);
-bindBtn('btnUp',    () => touchUp    = true, () => touchUp    = false);
+bindBtn('btnLeft',  () => touchLeft  = true,  () => touchLeft  = false);
+bindBtn('btnRight', () => touchRight = true,  () => touchRight = false);
+bindBtn('btnDown',  () => touchDuck  = true,  () => touchDuck  = false);
+// Jump fires doJump() immediately on press — handles double jump
+bindBtn('btnJump',  () => doJump(),  null);
 
 // ── KICK OFF ──────────────────────────────────────────────
 ctx.fillStyle = SKY;
